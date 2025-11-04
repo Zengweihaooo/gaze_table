@@ -3,7 +3,7 @@ if (!require(ggplot2)) install.packages("ggplot2")
 library(ggplot2)
 
 # ================= Data =================
-bench_mean <- 834.32; bench_sd <- 41.77
+bench_mean <- 0.9; bench_sd <- 0.92
 
 dat <- data.frame(
   Category = c("BenchmarkV",
@@ -25,17 +25,17 @@ dat <- data.frame(
                "Low","High",
                "Low","High"),
   mean     = c(bench_mean,
-               687.01, 643.88,  # Controller: Low, High
-               696.91, 580.31,  # Gaza: Low, High
-               786.58, 658.01,  # Head: Low, High
-               768.63, 621.61,  # Body: Low, High
-               687.01, 548.36), # Face: Low, High
+               4.27, 4.53,    # Controller: Low, High
+               4.43, 7.27,    # Gaza: Low, High
+               1.93, 5.63,    # Head: Low, High
+               1.83, 5.83,    # Body: Low, High
+               2.9, 6.77),    # Face: Low, High
   sd       = c(bench_sd,
-               96.51, 106.74,   # Controller: Low, High
-               105.81, 87.60,   # Gaza: Low, High
-               108.37, 91.13,   # Head: Low, High
-               81.43, 112.34,   # Body: Low, High
-               188.90, 166.50), # Face: Low, High
+               1.84, 1.80,    # Controller: Low, High
+               1.94, 2.35,    # Gaza: Low, High
+               2.29, 2.62,    # Head: Low, High
+               1.95, 3.31,    # Body: Low, High
+               1.95, 3.19),   # Face: Low, High
   stringsAsFactors = FALSE
 )
 
@@ -86,20 +86,27 @@ theme_base <- theme_minimal(base_size = 13) +
     axis.title         = element_blank()
   )
 
-# y 轴：0-1000 的坐标线，主要刻度间隔为 100
-y_top    <- 1000
-y_breaks <- seq(0, 1000, by = 100)  # 0, 100, 200, ..., 1000
+# y 轴：根据数据特点确定范围（0-10，主要刻度间隔为 2）
+y_top    <- 10
+y_breaks <- seq(0, 10, by = 2)  # 0, 2, 4, 6, 8, 10
 
 # x 轴：用数值坐标，刻度放在每个类目中心
 x_breaks <- seq_along(levels(dat$Category))
 x_labels <- levels(dat$Category)
 
+# ================= 95% 置信区间计算 =================
+n <- 30  # 样本量
+df <- n - 1  # 自由度 = 29
+t_critical <- qt(0.975, df)  # t分布临界值（95% CI，双尾）
+# 计算95% CI的误差范围
+dat$ci_margin <- t_critical * (dat$sd / sqrt(n))
+
 # ================= 图1：不带标注 =================
 p1 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-1000 的水平坐标线
+  # 手动添加 0-10 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+  geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
                 width = bar_w * 0.35, color = err_col, linewidth = 0.6,
                 position = "identity") +
   scale_fill_manual(values = c(Low = col_low, BenchmarkV = col_bench, High = col_high)) +
@@ -108,14 +115,15 @@ p1 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
   coord_cartesian(ylim = c(0, y_top), expand = 0) +
   theme_base
 
-# ================= 图2：带"均值(±SD)"标注 =================
-lab_df <- transform(dat, label = sprintf("%.2f (±%.2f)", mean, sd))
+# ================= 图2：带"均值 (95% CI)"标注 =================
+lab_df <- transform(dat, label = sprintf("%.2f [%.2f, %.2f]", mean, 
+                                          mean - ci_margin, mean + ci_margin))
 
 p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-1000 的水平坐标线
+  # 手动添加 0-10 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+  geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
                 width = bar_w * 0.35, color = err_col, linewidth = 0.6,
                 position = "identity") +
   geom_text(data = lab_df, aes(label = label),
@@ -127,6 +135,6 @@ p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
   theme_base
 
 # 保存文件
-ggsave("performance_D_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
-ggsave("performance_D_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+ggsave("performance_NoC_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
+ggsave("performance_NoC_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
 

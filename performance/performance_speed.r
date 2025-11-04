@@ -135,5 +135,5 @@ p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
   theme_base
 
 # 保存文件
-ggsave("bars_aligned_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
-ggsave("bars_aligned_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+ggsave("no_labels/bars_aligned_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
+ggsave("with_labels/bars_aligned_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")

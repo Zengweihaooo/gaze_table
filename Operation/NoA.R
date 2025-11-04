@@ -3,7 +3,7 @@ if (!require(ggplot2)) install.packages("ggplot2")
 library(ggplot2)
 
 # ================= Data =================
-bench_mean <- 0.57; bench_sd <- 0.80
+bench_mean <- 68.20; bench_sd <- 20.50
 
 dat <- data.frame(
   Category = c("BenchmarkV",
@@ -19,23 +19,23 @@ dat <- data.frame(
                "L","R",
                "L","R"),
   series   = c("BenchmarkV",
-               "Low","High",
-               "Low","High",
-               "Low","High",
-               "Low","High",
-               "Low","High"),
+               "Easy","Hard",
+               "Easy","Hard",
+               "Easy","Hard",
+               "Easy","Hard",
+               "Easy","Hard"),
   mean     = c(bench_mean,
-               5.26, 8.92,    # Controller: Low, High
-               3.91, 9.58,    # Gaza: Low, High
-               1.57, 4.90,    # Head: Low, High
-               1.53, 7.26,    # Body: Low, High
-               5.26, 8.92),   # Face: Low, High
+               55.43, 51.33,
+               50.00, 43.87,
+               40.70, 35.43,
+               31.97, 30.40,
+               43.43, 50.60),
   sd       = c(bench_sd,
-               4.78, 7.46,    # Controller: Low, High
-               2.22, 6.14,    # Gaza: Low, High
-               3.43, 3.34,    # Head: Low, High
-               2.42, 6.32,    # Body: Low, High
-               4.78, 7.46),   # Face: Low, High
+               19.36, 17.59,
+               9.28,  7.82,
+               10.01, 7.17,
+               7.11,  6.36,
+               11.28, 11.04),
   stringsAsFactors = FALSE
 )
 
@@ -43,7 +43,7 @@ dat <- data.frame(
 dat$Category <- factor(dat$Category,
   levels = c("BenchmarkV","Controller","Gaza","Head","Body","Face"))
 dat$slot   <- factor(dat$slot, levels = c("L","C","R"))
-dat$series <- factor(dat$series, levels = c("Low","BenchmarkV","High"))
+dat$series <- factor(dat$series, levels = c("Easy","BenchmarkV","Hard"))
 
 # ================= 手动定位（确保居中+相邻柱体有间距） =================
 # 以每个类目的中心为整数(1,2,3,...)，在左右各偏移 delta；两柱宽度为 bar_w
@@ -59,8 +59,8 @@ x_base <- as.numeric(dat$Category)
 dat$x  <- x_base + unname(offset_map[as.character(dat$slot)])
 
 # ================= 配色方案 =================
-col_low  <- "#8CEAB4"      # Low
-col_high <- "#F1917E"      # High
+col_easy  <- "#8CEAB4"      # Easy
+col_hard  <- "#F1917E"      # Hard
 col_bench <- "#B9BCDB"      # BenchmarkV
 
 err_col   <- "#484D5F"
@@ -86,47 +86,55 @@ theme_base <- theme_minimal(base_size = 13) +
     axis.title         = element_blank()
   )
 
-# y 轴：根据数据特点确定范围（0-18，主要刻度间隔为 2）
-y_top    <- 18
-y_breaks <- seq(0, 18, by = 2)  # 0, 2, 4, 6, 8, 10, 12, 14, 16, 18
+# y 轴：0-80 的坐标线
+y_top    <- 80
+y_breaks <- seq(0, 80, by = 10)
 
 # x 轴：用数值坐标，刻度放在每个类目中心
 x_breaks <- seq_along(levels(dat$Category))
 x_labels <- levels(dat$Category)
 
+# ================= 95% 置信区间计算 =================
+n <- 30  # 样本量
+df <- n - 1  # 自由度 = 29
+t_critical <- qt(0.975, df)  # t分布临界值（95% CI，双尾）
+# 计算95% CI的误差范围
+dat$ci_margin <- t_critical * (dat$sd / sqrt(n))
+
 # ================= 图1：不带标注 =================
 p1 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-18 的水平坐标线
+  # 手动添加 0-80 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+  geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
                 width = bar_w * 0.35, color = err_col, linewidth = 0.6,
                 position = "identity") +
-  scale_fill_manual(values = c(Low = col_low, BenchmarkV = col_bench, High = col_high)) +
+  scale_fill_manual(values = c(Easy = col_easy, BenchmarkV = col_bench, Hard = col_hard)) +
   scale_y_continuous(breaks = y_breaks, minor_breaks = NULL) +
   scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0, 0)) +
   coord_cartesian(ylim = c(0, y_top), expand = 0) +
   theme_base
 
-# ================= 图2：带"均值(±SD)"标注 =================
-lab_df <- transform(dat, label = sprintf("%.2f (±%.2f)", mean, sd))
+# ================= 图2：带"均值 (95% CI)"标注 =================
+lab_df <- transform(dat, label = sprintf("%.2f [%.2f, %.2f]", mean, 
+                                          mean - ci_margin, mean + ci_margin))
 
 p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-18 的水平坐标线
+  # 手动添加 0-80 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+  geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
                 width = bar_w * 0.35, color = err_col, linewidth = 0.6,
                 position = "identity") +
   geom_text(data = lab_df, aes(label = label),
             vjust = -0.5, size = 3.4, position = "identity") +
-  scale_fill_manual(values = c(Low = col_low, BenchmarkV = col_bench, High = col_high)) +
+  scale_fill_manual(values = c(Easy = col_easy, BenchmarkV = col_bench, Hard = col_hard)) +
   scale_y_continuous(breaks = y_breaks, minor_breaks = NULL) +
   scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0, 0)) +
   coord_cartesian(ylim = c(0, y_top * 1.02), expand = 0) +
   theme_base
 
 # 保存文件
-ggsave("performance_toc_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
-ggsave("performance_toc_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+ggsave("no_labels/NoA_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
+ggsave("with_labels/NoA_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
 

@@ -3,7 +3,7 @@ if (!require(ggplot2)) install.packages("ggplot2")
 library(ggplot2)
 
 # ================= Data =================
-bench_mean <- 32.19; bench_sd <- 1.37
+bench_mean <- 0.59; bench_sd <- 0.12
 
 dat <- data.frame(
   Category = c("BenchmarkV",
@@ -25,17 +25,17 @@ dat <- data.frame(
                "Easy","Hard",
                "Easy","Hard"),
   mean     = c(bench_mean,
-               27.41, 25.72,
-               28.10, 23.97,
-               30.72, 26.65,
-               30.24, 25.33,
-               27.60, 22.66),
+               0.66, 0.66,
+               0.68, 0.63,
+               1.03, 1.03,
+               1.29, 1.26,
+               0.66, 0.66),
   sd       = c(bench_sd,
-               3.15, 3.67,
-               3.11, 3.10,
-               4.21, 3.49,
-               3.09, 4.11,
-               6.18, 5.90),
+               0.11, 0.15,
+               0.12, 0.11,
+               0.19, 0.20,
+               0.18, 0.26,
+               0.53, 0.19),
   stringsAsFactors = FALSE
 )
 
@@ -86,9 +86,9 @@ theme_base <- theme_minimal(base_size = 13) +
     axis.title         = element_blank()
   )
 
-# y 轴：0-35 的坐标线
-y_top    <- 35
-y_breaks <- seq(0, 35, by = 5)
+# y 轴：0-1.4 的坐标线
+y_top    <- 1.4
+y_breaks <- seq(0, 1.4, by = 0.2)
 
 # x 轴：用数值坐标，刻度放在每个类目中心
 x_breaks <- seq_along(levels(dat$Category))
@@ -103,7 +103,7 @@ dat$ci_margin <- t_critical * (dat$sd / sqrt(n))
 
 # ================= 图1：不带标注 =================
 p1 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-35 的水平坐标线
+  # 手动添加 0-1.4 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
   geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
@@ -120,7 +120,7 @@ lab_df <- transform(dat, label = sprintf("%.2f [%.2f, %.2f]", mean,
                                           mean - ci_margin, mean + ci_margin))
 
 p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-35 的水平坐标线
+  # 手动添加 0-1.4 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
   geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
@@ -135,5 +135,6 @@ p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
   theme_base
 
 # 保存文件
-ggsave("bars_aligned_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
-ggsave("bars_aligned_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+ggsave("no_labels/DoA_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
+ggsave("with_labels/DoA_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+

@@ -3,7 +3,7 @@ if (!require(ggplot2)) install.packages("ggplot2")
 library(ggplot2)
 
 # ================= Data =================
-bench_mean <- 32.19; bench_sd <- 1.37
+bench_mean <- -164.90; bench_sd <- 33.30
 
 dat <- data.frame(
   Category = c("BenchmarkV",
@@ -25,17 +25,17 @@ dat <- data.frame(
                "Easy","Hard",
                "Easy","Hard"),
   mean     = c(bench_mean,
-               27.41, 25.72,
-               28.10, 23.97,
-               30.72, 26.65,
-               30.24, 25.33,
-               27.60, 22.66),
+               -232.66, -249.09,  # Controller: Easy, Hard
+               -250.64, -256.94,  # Gaza: Easy, Hard
+               -190.58, -253.51,  # Head: Easy, Hard
+               -212.58, -249.10,  # Body: Easy, Hard
+               -237.01, -255.76), # Face: Easy, Hard
   sd       = c(bench_sd,
-               3.15, 3.67,
-               3.11, 3.10,
-               4.21, 3.49,
-               3.09, 4.11,
-               6.18, 5.90),
+               37.42, 29.22,      # Controller: Easy, Hard
+               37.02, 38.67,      # Gaza: Easy, Hard
+               52.95, 27.12,      # Head: Easy, Hard
+               56.72, 29.29,      # Body: Easy, Hard
+               48.51, 40.06),     # Face: Easy, Hard
   stringsAsFactors = FALSE
 )
 
@@ -86,14 +86,6 @@ theme_base <- theme_minimal(base_size = 13) +
     axis.title         = element_blank()
   )
 
-# y 轴：0-35 的坐标线
-y_top    <- 35
-y_breaks <- seq(0, 35, by = 5)
-
-# x 轴：用数值坐标，刻度放在每个类目中心
-x_breaks <- seq_along(levels(dat$Category))
-x_labels <- levels(dat$Category)
-
 # ================= 95% 置信区间计算 =================
 n <- 30  # 样本量
 df <- n - 1  # 自由度 = 29
@@ -101,18 +93,27 @@ t_critical <- qt(0.975, df)  # t分布临界值（95% CI，双尾）
 # 计算95% CI的误差范围
 dat$ci_margin <- t_critical * (dat$sd / sqrt(n))
 
+# y 轴：根据数据特点确定范围（负数范围，-300到0，主要刻度间隔为 50）
+y_bottom <- -300
+y_top    <- 0
+y_breaks <- seq(y_bottom, y_top, by = 50)  # -300, -250, -200, -150, -100, -50, 0
+
+# x 轴：用数值坐标，刻度放在每个类目中心
+x_breaks <- seq_along(levels(dat$Category))
+x_labels <- levels(dat$Category)
+
 # ================= 图1：不带标注 =================
 p1 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-35 的水平坐标线
+  # 手动添加 -300到0 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
   geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
                 width = bar_w * 0.35, color = err_col, linewidth = 0.6,
                 position = "identity") +
   scale_fill_manual(values = c(Easy = col_easy, BenchmarkV = col_bench, Hard = col_hard)) +
-  scale_y_continuous(breaks = y_breaks, minor_breaks = NULL) +
+  scale_y_continuous(breaks = y_breaks, minor_breaks = NULL, trans = "reverse") +
   scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0, 0)) +
-  coord_cartesian(ylim = c(0, y_top), expand = 0) +
+  coord_cartesian(ylim = c(y_bottom, y_top), expand = 0) +
   theme_base
 
 # ================= 图2：带"均值 (95% CI)"标注 =================
@@ -120,7 +121,7 @@ lab_df <- transform(dat, label = sprintf("%.2f [%.2f, %.2f]", mean,
                                           mean - ci_margin, mean + ci_margin))
 
 p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
-  # 手动添加 0-35 的水平坐标线
+  # 手动添加 -300到0 的水平坐标线
   geom_hline(yintercept = y_breaks, color = "#E5E5E5", linewidth = 0.5) +
   geom_col(width = bar_w, position = "identity", colour = NA) +
   geom_errorbar(aes(ymin = mean - ci_margin, ymax = mean + ci_margin),
@@ -129,11 +130,12 @@ p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
   geom_text(data = lab_df, aes(label = label),
             vjust = -0.5, size = 3.4, position = "identity") +
   scale_fill_manual(values = c(Easy = col_easy, BenchmarkV = col_bench, Hard = col_hard)) +
-  scale_y_continuous(breaks = y_breaks, minor_breaks = NULL) +
+  scale_y_continuous(breaks = y_breaks, minor_breaks = NULL, trans = "reverse") +
   scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0, 0)) +
-  coord_cartesian(ylim = c(0, y_top * 1.02), expand = 0) +
+  coord_cartesian(ylim = c(y_bottom * 1.02, y_top), expand = 0) +
   theme_base
 
 # 保存文件
-ggsave("bars_aligned_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
-ggsave("bars_aligned_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+ggsave("no_labels/performance_sal_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
+ggsave("with_labels/performance_sal_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+
