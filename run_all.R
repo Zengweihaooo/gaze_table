@@ -47,15 +47,36 @@ cat("开始运行所有R脚本生成图表...\n\n")
 success_files <- c()
 failed_files <- c()
 
+# 保存原始工作目录
+original_wd <- getwd()
+
 # 遍历所有文件并运行
 for (file in r_files) {
   if (file.exists(file)) {
     cat(sprintf("正在运行: %s\n", file))
     tryCatch({
-      source(file)
+      # 获取文件所在目录
+      file_dir <- dirname(file)
+      file_name <- basename(file)
+      
+      # 切换到文件所在目录
+      if (file_dir != ".") {
+        setwd(file.path(original_wd, file_dir))
+      } else {
+        setwd(original_wd)
+      }
+      
+      # 运行R文件（使用文件名，因为已经在正确的目录了）
+      source(file_name)
+      
+      # 切换回原始目录
+      setwd(original_wd)
+      
       success_files <- c(success_files, file)
       cat(sprintf("✓ 成功: %s\n\n", file))
     }, error = function(e) {
+      # 确保切换回原始目录（即使出错）
+      setwd(original_wd)
       failed_files <- c(failed_files, file)
       cat(sprintf("✗ 失败: %s - %s\n\n", file, conditionMessage(e)))
     })
