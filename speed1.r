@@ -100,5 +100,5 @@ p2 <- ggplot(dat, aes(x = Category, y = mean, group = slot, fill = series)) +
 print(p2)
 
 # -------- Save PNG files --------
-ggsave("bars_centered_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "#EFEFEF")
-ggsave("bars_centered_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "#EFEFEF")
+ggsave("bars_centered_no_labels.png", p1, width = 8, height = 3.57, dpi = 300, bg = "#EFEFEF")
+ggsave("bars_centered_with_labels.png", p2, width = 8, height = 3.92, dpi = 300, bg = "#EFEFEF")

@@ -121,5 +121,5 @@ save_exact_px <- function(plot, file, width_px, height_px, bg = "#EFEFEF") {
 }
 
 # Save files
-ggsave("bars_centered_nogap.png", p1, width = 8, height = 4.2, dpi = 300, bg = "#EFEFEF")
-ggsave("bars_centered_nogap_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "#EFEFEF")
+ggsave("bars_centered_nogap.png", p1, width = 8, height = 3.57, dpi = 300, bg = "#EFEFEF")
+ggsave("bars_centered_nogap_labels.png", p2, width = 8, height = 3.92, dpi = 300, bg = "#EFEFEF")

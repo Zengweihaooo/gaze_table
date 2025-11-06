@@ -141,6 +141,6 @@ p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
 # 保存文件（确保目录存在）
 if (!dir.exists("no_labels")) dir.create("no_labels", recursive = TRUE)
 if (!dir.exists("with_labels")) dir.create("with_labels", recursive = TRUE)
-ggsave("no_labels/RW_no_labels.png", p1, width = 8, height = 4.2, dpi = 300, bg = "white")
-ggsave("with_labels/RW_with_labels.png", p2, width = 8, height = 4.6, dpi = 300, bg = "white")
+ggsave("no_labels/RW_no_labels.png", p1, width = 8, height = 3.57, dpi = 300, bg = "white")
+ggsave("with_labels/RW_with_labels.png", p2, width = 8, height = 3.92, dpi = 300, bg = "white")
 
