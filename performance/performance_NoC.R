@@ -135,6 +135,8 @@ p2 <- ggplot(dat, aes(x = x, y = mean, fill = series)) +
   theme_base
 
 # 保存文件
-ggsave("performance_NoC_no_labels.png", p1, width = 8, height = 3.57, dpi = 300, bg = "white")
-ggsave("performance_NoC_with_labels.png", p2, width = 8, height = 3.92, dpi = 300, bg = "white")
+if (!dir.exists("no_labels")) dir.create("no_labels", recursive = TRUE)
+if (!dir.exists("with_labels")) dir.create("with_labels", recursive = TRUE)
+ggsave("no_labels/performance_NoC_no_labels.png", p1, width = 8, height = 3.57, dpi = 300, bg = "white")
+ggsave("with_labels/performance_NoC_with_labels.png", p2, width = 8, height = 3.92, dpi = 300, bg = "white")
 
